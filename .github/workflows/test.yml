@@ -1,0 +1,40 @@
+name: Install & test PHP code
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      version: '5.6'
+      extensions: mongo, redis
+      SYMFONY_ENV: test
+      APP_ENV: test
+      ACTIVE_CONTEXT: components.core:p1.sandbox
+    steps:
+      - name: Setup cache environment
+        id: extcache
+        uses: shivammathur/cache-extensions@v1
+        with:
+          php-version: ${{ env.version }}
+          extensions: ${{ env.extensions }}
+          key: cache-v1
+      - name: Cache extensions
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.extcache.outputs.dir }}
+          key: ${{ steps.extcache.outputs.key }}
+          restore-keys: ${{ steps.extcache.outputs.key }}
+
+      - name: Setup PHP environment
+        uses: shivammathur/setup-php@verbose
+        with:
+          php-version: ${{ env.version }}
+          extensions: ${{ env.extensions }}
+
+      - name: Check out code
+        uses: actions/checkout@v2
